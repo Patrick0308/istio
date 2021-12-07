@@ -43,7 +43,7 @@ include:
 build:
   extends: .docker-login
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.10-2021-05-07T16-55-59
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
   only:
     - longbridge-1.11
   tags:
