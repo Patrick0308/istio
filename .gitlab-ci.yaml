@@ -1,0 +1,68 @@
+include:
+  - https://git.5th.im/long-bridge-middleware/ci-template/-/raw/master/ci.yaml
+
+
+.push-new-template:
+  stage: push
+  image: docker.longbridge-inc.com/open-source/ci-template/ecr-image-push
+  variables:
+    ENV: test
+    TAG: ""
+    TARGET_TAG: ""
+    IMAGE_HOST: docker.longbridge-inc.com
+    IMAGE_ORIGIN_NAME: ""
+    IMAGE_TARGET_NAME: ""
+  script:
+    - if [ $ENV = "prod-hk" ]; then
+    -   export AWS_ACCESS_KEY_ID=$PROD_HK_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$PROD_HK_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$PROD_HK_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$PROD_HK_IMAGE_HOST
+    - elif [ $ENV = "prod-bj" ]; then
+    -   export AWS_ACCESS_KEY_ID=$PROD_BJ_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$PROD_BJ_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$PROD_BJ_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$PROD_BJ_IMAGE_HOST
+    - elif [ $ENV = "canary-hk" ]; then
+    -   export AWS_ACCESS_KEY_ID=$CANARY_HK_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$CANARY_HK_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$CANARY_HK_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$CANARY_HK_IMAGE_HOST
+    - else
+    -   echo "Unsupported Environment"
+    -   exit -1
+    - fi
+    - set +e; aws ecr create-repository --repository-name $IMAGE_TARGET_NAME --region $AWS_REGION; set -e
+    - sh -c "yes 'y' | `aws ecr get-login --no-include-email --region $AWS_REGION`"
+    ## push image to target
+    - '[ -z "$TARGET_TAG" ] && export TARGET_TAG=$TAG && echo "target tag ${TARGET_TAG}"'
+    - docker pull $IMAGE_HOST/$IMAGE_ORIGIN_NAME:$TAG
+    - docker tag $IMAGE_HOST/$IMAGE_ORIGIN_NAME:$TAG $TARGET_IMAGE_HOST/$IMAGE_TARGET_NAME:$TARGET_TAG
+    - docker push $TARGET_IMAGE_HOST/$IMAGE_TARGET_NAME:$TARGET_TAG
+
+build:
+  extends: .docker-login
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.10-2021-05-07T16-55-59
+  only:
+    - longbridge-1.11
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=1.11.5-1 BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:1.11.5-1 docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1
+    - docker push docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1
+    - docker tag docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-1
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-1
+
+canary_hk_push_build_pilot:
+  extends: .push-new-template
+  only:
+    - longbridge
+  variables:
+    ENV: canary-hk
+    TAG: 1.11.5-1
+    IMAGE_HOST: docker.longbridge-inc.com
+    IMAGE_ORIGIN_NAME: long-bridge-middleware/istio/pilot
+    IMAGE_TARGET_NAME: long-bridge-middleware/istio/pilot
+  when: manual
