@@ -58,7 +58,7 @@ build:
 canary_hk_push_build_pilot:
   extends: .push-new-template
   only:
-    - longbridge
+    - longbridge-1.11
   variables:
     ENV: canary-hk
     TAG: 1.11.5-1
