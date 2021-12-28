@@ -49,11 +49,11 @@ build:
   tags:
     - runner-istio-proxy
   script:
-    - TAG=1.11.5-1 BUILD_WITH_CONTAINER=0 make docker.pilot
-    - docker tag istio/pilot:1.11.5-1 docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1
-    - docker push docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1
-    - docker tag docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-1 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-1
-    - docker push docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-1
+    - TAG=1.11.5-2 BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:1.11.5-1 docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-2
+    - docker push docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-2
+    - docker tag docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-2 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-2
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-2
 
 canary_hk_push_build_pilot:
   extends: .push-new-template
@@ -61,7 +61,7 @@ canary_hk_push_build_pilot:
     - longbridge-1.11
   variables:
     ENV: canary-hk
-    TAG: 1.11.5-1
+    TAG: 1.11.5-2
     IMAGE_HOST: docker.longbridge-inc.com
     IMAGE_ORIGIN_NAME: long-bridge-middleware/istio/pilot
     IMAGE_TARGET_NAME: long-bridge-middleware/istio/pilot
