@@ -349,12 +349,10 @@ func convertWorkloadInstanceToServiceInstance(workloadInstance *model.IstioEndpo
 		for _, serviceEntryPort := range serviceEntry.Ports {
 			ep := *workloadInstance
 			ep.ServicePortName = serviceEntryPort.Name
-			// if target port is set, use the target port else fallback to the service port
+			// if target port is set, use the target port else fallback to the endpoint port
 			// TODO: we need a way to get the container port map from k8s
 			if serviceEntryPort.TargetPort > 0 {
 				ep.EndpointPort = serviceEntryPort.TargetPort
-			} else {
-				ep.EndpointPort = serviceEntryPort.Number
 			}
 			ep.EnvoyEndpoint = nil
 			out = append(out, &model.ServiceInstance{
