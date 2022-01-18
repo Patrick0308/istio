@@ -211,6 +211,11 @@ func ResolveShortnameToFQDN(hostname string, meta config.Meta) host.Name {
 		return host.Name(out)
 	}
 
+	if strings.HasSuffix(hostname, ".") {
+		out = strings.TrimSuffix(hostname, ".")
+		return host.Name(out)
+	}
+
 	// if the hostname is a valid ipv4 or ipv6 address, do not append domain or namespace
 	if net.ParseIP(hostname) != nil {
 		return host.Name(out)
