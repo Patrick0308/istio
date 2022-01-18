@@ -50,5 +50,6 @@ build:
     - runner-istio-proxy
   script:
     - TAG=1.11.5-3 BUILD_WITH_CONTAINER=0 make docker.pilot
-    - docker tag docker.longbridge-inc.com/long-bridge-middleware/istio/pilot:1.11.5-3 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-3
+    - docker tag istio/pilot:1.11.5-3 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-3
     - docker push docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-3
+
