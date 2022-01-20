@@ -64,7 +64,7 @@ build-proxyv2:
   tags:
     - runner-istio-proxy
   script:
-    - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LOCAL=./build/ USE_LOCAL_PROXY=1 make docker.proxyv2
+    - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LOCAL=./build/envoy-centos-bdf47abe1821c37d739c7467e9c82a3885f208f0 USE_LOCAL_PROXY=1 make docker.proxyv2
     # - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 make docker.proxyv2
     - docker tag istio/proxyv2:1.11.5-5 docker.longbridge-inc.com/open-source/istio/proxyv2:1.11.5-5
     - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:1.11.5-5
