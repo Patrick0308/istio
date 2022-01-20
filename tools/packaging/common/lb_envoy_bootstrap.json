@@ -3,7 +3,17 @@
     "id": "{{ .nodeID }}",
     "cluster": "{{ .cluster }}",
     "locality": {
-      {{- if .region}}
+      {{- if .region }}
+      "region": "{{ .region }}"
+      {{- end }}
+      {{- if .zone }}
+      {{- if .region }}
+      ,
+      {{- end }}
+      "zone": "{{ .zone }}"
+      {{- end }}
+      {{- if .sub_zone }}
+      {{- if or .region .zone }}
       ,
       {{- end }}
       "sub_zone": "{{ .sub_zone }}"
