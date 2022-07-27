@@ -45,26 +45,55 @@ build-pilot:
   when: manual
   stage: build
   image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
-  only:
-    - longbridge-1.11
   tags:
     - runner-istio-proxy
   script:
-    - TAG=1.11.5-3 BUILD_WITH_CONTAINER=0 make docker.pilot
-    - docker tag istio/pilot:1.11.5-3 docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-3
-    - docker push docker.longbridge-inc.com/open-source/istio/pilot:1.11.5-3
+    - TAG=latest BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:latest docker.longbridge-inc.com/open-source/istio/pilot:latest
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:latest
 
 build-proxyv2:
   extends: .docker-login
   when: manual
   stage: build
   image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
-  only:
-    - longbridge-1.11
   tags:
     - runner-istio-proxy
   script:
-    - TAG=1.11.5-6 BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LINUX_RELEASE_PATH=./build/envoy make docker.proxyv2
+    - TAG=latest BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LINUX_RELEASE_PATH=./build/envoy make docker.proxyv2
     # - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 make docker.proxyv2
-    - docker tag istio/proxyv2:1.11.5-6 docker.longbridge-inc.com/open-source/istio/proxyv2:1.11.5-6
-    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:1.11.5-6
+    - docker tag istio/proxyv2:latest docker.longbridge-inc.com/open-source/istio/proxyv2:latest
+    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:latest
+
+release-pilot:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  only:
+    - tags
+  variables:
+    TARGET_TAG: $CI_COMMIT_TAG
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=$CI_COMMIT_TAG BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/pilot:$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:$CI_COMMIT_TAG
+
+release-proxyv2:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  only:
+    - tags
+  variables:
+    TARGET_TAG: $CI_COMMIT_TAG
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=$CI_COMMIT_TAG BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LINUX_RELEASE_PATH=./build/envoy make docker.proxyv2
+    # - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 make docker.proxyv2
+    - docker tag istio/proxyv2:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/proxyv2:$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:$CI_COMMIT_TAG
