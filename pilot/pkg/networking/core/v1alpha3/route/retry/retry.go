@@ -44,12 +44,18 @@ func DefaultPolicy() *route.RetryPolicy {
 		// },
 		// // TODO: allow this to be configured via API.
 		// HostSelectionRetryMaxAttempts: 5,
-		NumRetries:           &wrappers.UInt32Value{Value: 0},
-		RetryOn:              "",
+		NumRetries:           &wrappers.UInt32Value{Value: 2},
+		RetryOn:              "connect-failure,unavailable,gateway-error",
 		RetriableStatusCodes: nil,
-		RetryHostPredicate: nil,
+		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+			{
+				// to configure retries to prefer hosts that haven’t been attempted already,
+				// the builtin `envoy.retry_host_predicates.previous_hosts` predicate can be used.
+				Name: "envoy.retry_host_predicates.previous_hosts",
+			},
+		},
 		// TODO: allow this to be configured via API.
-		HostSelectionRetryMaxAttempts: 0,
+		HostSelectionRetryMaxAttempts: 5,
 	}
 	return &policy
 }
