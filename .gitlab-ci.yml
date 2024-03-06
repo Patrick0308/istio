@@ -1,0 +1,104 @@
+include:
+  - https://git.5th.im/long-bridge-middleware/ci-template/-/raw/master/ci.yaml
+
+
+.push-new-template:
+  stage: push
+  image: docker.longbridge-inc.com/open-source/ci-template/ecr-image-push
+  variables:
+    ENV: test
+    TAG: ""
+    TARGET_TAG: ""
+    IMAGE_HOST: docker.longbridge-inc.com
+    IMAGE_ORIGIN_NAME: ""
+    IMAGE_TARGET_NAME: ""
+  script:
+    - if [ $ENV = "prod-hk" ]; then
+    -   export AWS_ACCESS_KEY_ID=$PROD_HK_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$PROD_HK_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$PROD_HK_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$PROD_HK_IMAGE_HOST
+    - elif [ $ENV = "prod-bj" ]; then
+    -   export AWS_ACCESS_KEY_ID=$PROD_BJ_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$PROD_BJ_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$PROD_BJ_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$PROD_BJ_IMAGE_HOST
+    - elif [ $ENV = "canary-hk" ]; then
+    -   export AWS_ACCESS_KEY_ID=$CANARY_HK_ECR_AWS_ACCESS_KEY_ID
+    -   export AWS_SECRET_ACCESS_KEY=$CANARY_HK_ECR_AWS_SECRET_ACCESS_KEY
+    -   export AWS_REGION=$CANARY_HK_ECR_AWS_REGION
+    -   export TARGET_IMAGE_HOST=$CANARY_HK_IMAGE_HOST
+    - else
+    -   echo "Unsupported Environment"
+    -   exit -1
+    - fi
+    - set +e; aws ecr create-repository --repository-name $IMAGE_TARGET_NAME --region $AWS_REGION; set -e
+    - sh -c "yes 'y' | `aws ecr get-login --no-include-email --region $AWS_REGION`"
+    ## push image to target
+    - '[ -z "$TARGET_TAG" ] && export TARGET_TAG=$TAG && echo "target tag ${TARGET_TAG}"'
+    - docker pull $IMAGE_HOST/$IMAGE_ORIGIN_NAME:$TAG
+    - docker tag $IMAGE_HOST/$IMAGE_ORIGIN_NAME:$TAG $TARGET_IMAGE_HOST/$IMAGE_TARGET_NAME:$TARGET_TAG
+    - docker push $TARGET_IMAGE_HOST/$IMAGE_TARGET_NAME:$TARGET_TAG
+
+build-pilot:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=latest BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:latest docker.longbridge-inc.com/open-source/istio/pilot:hk-latest
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:hk-latest
+
+build-proxyv2:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=latest BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LINUX_RELEASE_PATH=./build/envoy make docker.proxyv2
+    # - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 make docker.proxyv2
+    - docker tag istio/proxyv2:latest docker.longbridge-inc.com/open-source/istio/proxyv2:hk-latest
+    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:hk-latest
+
+release-pilot:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  only:
+    - tags
+  variables:
+    TARGET_TAG: $CI_COMMIT_TAG
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=$CI_COMMIT_TAG BUILD_WITH_CONTAINER=0 make docker.pilot
+    - docker tag istio/pilot:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/pilot:hk-$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:hk-$CI_COMMIT_TAG
+    - docker tag istio/pilot:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/pilot:mainland-$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/pilot:mainland-$CI_COMMIT_TAG
+
+release-proxyv2:
+  extends: .docker-login
+  when: manual
+  stage: build
+  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  only:
+    - tags
+  variables:
+    TARGET_TAG: $CI_COMMIT_TAG
+  tags:
+    - runner-istio-proxy
+  script:
+    - TAG=$CI_COMMIT_TAG BUILD_WITH_CONTAINER=0 ISTIO_ENVOY_LINUX_RELEASE_PATH=./build/envoy make docker.proxyv2
+    # - TAG=1.11.5-5 BUILD_WITH_CONTAINER=0 make docker.proxyv2
+    - docker tag istio/proxyv2:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/proxyv2:hk-$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:hk-$CI_COMMIT_TAG
+    - docker tag istio/proxyv2:$CI_COMMIT_TAG docker.longbridge-inc.com/open-source/istio/proxyv2:mainland-$CI_COMMIT_TAG
+    - docker push docker.longbridge-inc.com/open-source/istio/proxyv2:mainland-$CI_COMMIT_TAG
+
