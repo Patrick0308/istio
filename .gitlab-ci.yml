@@ -44,11 +44,10 @@ build-pilot:
   extends: .docker-login
   when: manual
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.16-b46bf793553c9bfedf6cf27ddacd67f3768b3a25
   tags:
     - runner-istio-proxy
   script:
-    - TAG=latest BUILD_WITH_CONTAINER=0 make docker.pilot
+    - TAG=latest make docker.pilot
     - docker tag istio/pilot:latest docker.longbridge-inc.com/open-source/istio/pilot:hk-latest
     - docker push docker.longbridge-inc.com/open-source/istio/pilot:hk-latest
 
