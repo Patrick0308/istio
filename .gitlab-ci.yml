@@ -44,7 +44,7 @@ build-pilot:
   extends: .docker-login
   when: manual
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  image: gcr.io/istio-testing/build-tools:release-1.16-latest
   tags:
     - runner-istio-proxy
   script:
@@ -56,7 +56,7 @@ build-proxyv2:
   extends: .docker-login
   when: manual
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  image: gcr.io/istio-testing/build-tools:release-1.16-latest
   tags:
     - runner-istio-proxy
   script:
@@ -69,7 +69,7 @@ release-pilot:
   extends: .docker-login
   when: manual
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  image: gcr.io/istio-testing/build-tools:release-1.16-latest
   only:
     - tags
   variables:
@@ -87,7 +87,7 @@ release-proxyv2:
   extends: .docker-login
   when: manual
   stage: build
-  image: gcr.io/istio-testing/build-tools:release-1.11-2021-11-15T12-29-57
+  image: gcr.io/istio-testing/build-tools:release-1.16-latest
   only:
     - tags
   variables:
